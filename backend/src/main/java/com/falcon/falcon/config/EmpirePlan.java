@@ -2,6 +2,9 @@ package com.falcon.falcon.config;
 
 import java.util.List;
 
-public record EmpirePlan(int countDown, List<BountyHunter> bountyHunters) {
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public record EmpirePlan(int countdown, 
+    @JsonProperty("bounty_hunters") List<BountyHunter> bountyHunters) {
 
 }
