@@ -2,6 +2,7 @@ package com.falcon.falcon.config;
 
 import java.util.List;
 
+import com.falcon.falcon.utils.Require;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record EmpirePlan(int countdown, 

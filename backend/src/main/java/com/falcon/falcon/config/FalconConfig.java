@@ -1,5 +1,8 @@
 package com.falcon.falcon.config;
 
+import java.nio.file.Path;
+
+import com.falcon.falcon.utils.Require;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record FalconConfig(int autonomy, String departure, String arrival, 
@@ -10,5 +13,10 @@ public record FalconConfig(int autonomy, String departure, String arrival,
             Require.that(departure != null && !departure.isBlank(),"departure is required");
             Require.that(arrival != null && !arrival.isBlank(),"arrival is required");
             Require.that(routesDb != null && !routesDb.isBlank(),"routes_db is required");
+        }
+
+        
+        public Path resolveRouteDbPath(Path falconConfigPath){
+            return falconConfigPath.toAbsolutePath().getParent().resolve(routesDb);
         }
 }

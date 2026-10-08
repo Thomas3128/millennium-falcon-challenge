@@ -1,10 +1,10 @@
-package com.falcon.falcon.config;
+package com.falcon.falcon.utils;
 
 public final class Require {
     
-    private Require(){}
+    public Require(){}
 
-    static void that(boolean condition, String message){
+    public static void that(boolean condition, String message){
         if(!condition){
             throw new IllegalArgumentException(message);
         }

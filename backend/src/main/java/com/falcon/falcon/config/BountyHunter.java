@@ -1,5 +1,7 @@
 package com.falcon.falcon.config;
 
+import com.falcon.falcon.utils.Require;
+
 public record BountyHunter(String planet, int day) {
 
     public BountyHunter{
