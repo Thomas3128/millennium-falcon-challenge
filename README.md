@@ -7,6 +7,34 @@ Solution to the Dataiku technical assessment : work in progress...
 - `examples/` : data given in the read me (example1 to example4).
 
 
+## Build and run
+
+Java 21 or later is the only prerequisite; the Maven wrapper takes care of the rest.
+
+```sh
+cd backend && ./mvnw package
+```
+
+Then, from the root of the repository:
+
+```sh
+./give-me-the-odds examples/example2/millennium-falcon.json examples/example2/empire.json
+```
+
+```
+81
+```
+
+Windows users can run `give-me-the-odds.bat` with the same arguments. The result is
+printed on standard output as a whole percentage and nothing else; errors go to standard
+error, with exit code `1` for a wrong invocation and `2` for a failed mission.
+
+To run the test suite:
+
+```sh
+cd backend && ./mvnw test
+```
+
 ## Assumptions
 
 The statement leaves a few cases open. Each one below states what was chosen and why.
@@ -53,6 +81,17 @@ The statement describes them separately, but both cost one day and expose the cr
 the same risk, while refuelling never leaves less fuel than waiting. Waiting is
 therefore strictly dominated, and one transition covers both without losing any
 reachable outcome.
+
+### Displayed result
+
+**The percentage is rounded to the nearest integer.** The four examples all land on
+whole numbers, so they do not settle the question; `0.9³ = 0.729` becomes `73`. Rounding
+to the nearest is what a reader expects of a percentage, and it never misstates the odds
+by more than half a point.
+
+One consequence is worth naming: beyond roughly fifty unavoidable encounters the odds
+round down to `0%`, which then reads the same as "Endor cannot be reached at all". The
+two situations stay distinct in the computation, only the display conflates them.
 
 ## Use of AI tools
 

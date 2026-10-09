@@ -1,0 +1,21 @@
+#!/bin/sh
+# prints the odds of reaching the target in time, as a percentage.
+#
+#   give-me-the-odds <millennium-falcon.json> <empire.json>
+#
+# Build it first with: cd backend && ./mvnw package
+
+set -e
+
+JAVA_MAJOR=$(java -XshowSettings:properties -version 2>&1 | sed -n 's/^ *java\.specification\.version *= *//p' | cut -d. -f1)
+[ "$JAVA_MAJOR" -ge 21 ] 2>/dev/null || { echo "Java 21 or later is required, found ${JAVA_MAJOR:-none}." >&2; exit 3; }
+
+DIR=$(cd "$(dirname "$0")" && pwd)
+JAR=$(ls "$DIR"/backend/target/falcon-*.jar 2>/dev/null | head -1)
+
+if [ -z "$JAR" ]; then
+    echo "Jar not found. Build it with: cd backend && ./mvnw package" >&2
+    exit 3
+fi
+
+exec java -Dloader.main=com.falcon.falcon.cli.GiveMeTheOdds -jar "$JAR" "$@"

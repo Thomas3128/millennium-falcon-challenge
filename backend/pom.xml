@@ -53,6 +53,11 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<!-- ZIP layout uses PropertiesLauncher, so -Dloader.main can select
+					     the CLI entry point instead of the web application. -->
+					<layout>ZIP</layout>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
