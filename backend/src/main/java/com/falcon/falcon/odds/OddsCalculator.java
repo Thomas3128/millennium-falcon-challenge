@@ -36,8 +36,7 @@ public class OddsCalculator {
     }
 
     /**
-     * The goal is to do a dijkstra where the weight is the number of time the
-     * falcon encounters the hunters,
+     * The goal is to do a dijkstra where the weight is the number of time the falcon encounters the hunters,
      * and to drop the paths leading to a countdown overlap.
      */
     public double compute(EmpirePlan plan) {
