@@ -10,15 +10,7 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import tools.jackson.core.exc.JacksonIOException;
-import tools.jackson.databind.exc.MismatchedInputException;
-import tools.jackson.databind.exc.ValueInstantiationException;
 
-/**
- * Covers the JSON mapping concerns: field naming, unreadable or malformed
- * input, and the fact that a validation failure is not swallowed on the way.
- * The validation rules themselves are tested on the records.
- */
 class ConfigLoaderTest {
 
     private static final Path EXAMPLE1 = Path.of("../examples/example1");
@@ -61,13 +53,13 @@ class ConfigLoaderTest {
     @Test
     void fails_when_the_file_does_not_exist() {
         assertThatThrownBy(() -> configLoader.loadFalconConfig(Path.of("this_file_does_not_exist.json")))
-                .isInstanceOf(JacksonIOException.class);
+                .isInstanceOf(ConfigurationException.class);
     }
 
     @Test
     void fails_when_the_file_holds_a_different_shape() {
         assertThatThrownBy(() -> configLoader.loadFalconConfig(EXAMPLE1.resolve("empire.json")))
-                .isInstanceOf(MismatchedInputException.class);
+                .isInstanceOf(ConfigurationException.class);
     }
 
     @Test
@@ -76,7 +68,7 @@ class ConfigLoaderTest {
         Files.writeString(file, "{}");
 
         assertThatThrownBy(() -> configLoader.loadFalconConfig(file))
-                .isInstanceOf(MismatchedInputException.class);
+                .isInstanceOf(ConfigurationException.class);
     }
 
     @Test
@@ -85,7 +77,7 @@ class ConfigLoaderTest {
         Files.writeString(file, "{\"autonomy\": 7}");
 
         assertThatThrownBy(() -> configLoader.loadFalconConfig(file))
-                .isInstanceOf(ValueInstantiationException.class)
+                .isInstanceOf(ConfigurationException.class)
                 .hasRootCauseInstanceOf(IllegalArgumentException.class);
     }
 
