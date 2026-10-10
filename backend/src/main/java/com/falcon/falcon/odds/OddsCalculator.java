@@ -2,11 +2,15 @@ package com.falcon.falcon.odds;
 
 import static java.util.Comparator.comparingInt;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Set;
 
 import com.falcon.falcon.config.BountyHunterSchedule;
 import com.falcon.falcon.config.EmpirePlan;
@@ -24,6 +28,10 @@ public class OddsCalculator {
     private final int autonomy;
     private final String departure;
     private final String arrival;
+    // Whether a route the tank can actually cover leads to the arrival. Checked once here,
+    // since it depends only on the map and the autonomy: without it, an unreachable arrival
+    // would make the search try every day of the countdown before giving up.
+    private final boolean arrivalReachable;
 
     public OddsCalculator(Galaxy galaxy, FalconConfig config) {
         Require.that(galaxy != null, "galaxy is required");
@@ -33,6 +41,7 @@ public class OddsCalculator {
         this.autonomy = config.autonomy();
         this.departure = config.departure();
         this.arrival = config.arrival();
+        this.arrivalReachable = isArrivalReachable(galaxy, autonomy, departure, arrival);
     }
 
     /**
@@ -41,6 +50,9 @@ public class OddsCalculator {
      */
     public double compute(EmpirePlan plan) {
         Require.that(plan != null, "empire plan is required");
+        if (!arrivalReachable) {
+            return 0.0;
+        }
 
         BountyHunterSchedule schedule = new BountyHunterSchedule(plan.bountyHunters());
         int countdown = plan.countdown();
@@ -98,4 +110,23 @@ public class OddsCalculator {
 
         return validStates;
     }
+
+
+    private static boolean isArrivalReachable(Galaxy galaxy, int autonomy, String departure, String arrival) {
+    Set<String> visited = new HashSet<>(List.of(departure));
+    Deque<String> toVisit = new ArrayDeque<>(List.of(departure));
+
+    while (!toVisit.isEmpty()) {
+        String planet = toVisit.poll();
+        if (planet.equals(arrival)) {
+            return true;
+        }
+        for (Jump jump : galaxy.neighboursOf(planet)) {
+            if (jump.travelTime() <= autonomy && visited.add(jump.planet())) {
+                toVisit.add(jump.planet());
+            }
+        }
+    }
+    return false;
+}
 }

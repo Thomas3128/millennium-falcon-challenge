@@ -2,7 +2,9 @@ package com.falcon.falcon.odds;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
+import static org.junit.jupiter.api.Assertions.assertTimeout;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -87,5 +89,33 @@ class OddsCalculatorTest {
         EmpirePlan hothIsWatched = new EmpirePlan(9, List.of(new BountyHunter("Hoth", 6)));
 
         assertThat(calculator.compute(hothIsWatched)).isEqualTo(1.0);
+    }
+
+    @Test
+    void gives_up_at_once_when_no_route_leads_to_the_target() {
+        // Without a reachability check, the search would try every day of the countdown
+        // before concluding that Coruscant cannot be reached.
+        OddsCalculator towardsNowhere = new OddsCalculator(GALAXY,
+                new FalconConfig(6, "Tatooine", "Coruscant", "universe.db"));
+        EmpirePlan endlessCountdown = new EmpirePlan(1_000_000, List.of());
+
+        double odds = assertTimeout(Duration.ofSeconds(1), () -> towardsNowhere.compute(endlessCountdown));
+
+        assertThat(odds).isEqualTo(0.0);
+    }
+
+    @Test
+    void gives_up_at_once_when_the_only_route_is_longer_than_the_autonomy() {
+        // Endor is on the map, but a 10-day jump never fits in a 6-day tank.
+        Galaxy galaxy = new Galaxy(List.of(
+                new Route("Tatooine", "Dagobah", 1),
+                new Route("Dagobah", "Hoth", 1),
+                new Route("Hoth", "Endor", 10)));
+        OddsCalculator calculator = new OddsCalculator(galaxy, FALCON);
+        EmpirePlan endlessCountdown = new EmpirePlan(1_000_000, List.of());
+
+        double odds = assertTimeout(Duration.ofSeconds(1), () -> calculator.compute(endlessCountdown));
+
+        assertThat(odds).isEqualTo(0.0);
     }
 }
