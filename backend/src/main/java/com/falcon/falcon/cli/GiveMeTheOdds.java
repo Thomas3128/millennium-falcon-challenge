@@ -18,7 +18,7 @@ public class GiveMeTheOdds {
 
         try {
             Mission mission = new Mission(Path.of(args[0]));
-            System.out.println(SuccessOdds.toPercentage(mission.getOdds(Path.of(args[1]))));
+            System.out.println(SuccessOdds.toPercentage(mission.odds(Path.of(args[1]))));
 
         } catch (RuntimeException failure) {
             // Report the message rather than a stack trace, the type when there is none.
