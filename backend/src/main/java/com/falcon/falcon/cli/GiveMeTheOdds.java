@@ -3,6 +3,7 @@ package com.falcon.falcon.cli;
 import java.nio.file.Path;
 
 import com.falcon.falcon.app.Mission;
+import com.falcon.falcon.odds.SuccessOdds;
 
 /**
  * Prints the odds of success as a percentage on standard output.
@@ -17,7 +18,7 @@ public class GiveMeTheOdds {
 
         try {
             Mission mission = new Mission(Path.of(args[0]));
-            System.out.println(Math.round(mission.getOdds(Path.of(args[1])) * 100));
+            System.out.println(SuccessOdds.toPercentage(mission.getOdds(Path.of(args[1]))));
 
         } catch (RuntimeException failure) {
             // Report the message rather than a stack trace, the type when there is none.
