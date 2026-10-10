@@ -36,6 +36,18 @@ error, with exit code `1` for a wrong invocation and `2` for a failed mission.
 
 ### Web application
 
+From the root of the repository, start the server with the path to your
+`millennium-falcon.json`:
+
+```sh
+java -jar backend/target/falcon-0.0.1-SNAPSHOT.jar --falcon.config-file=<path/to/millennium-falcon.json>
+```
+
+As the statement specifies, a relative `routes_db` is resolved from the folder of
+`millennium-falcon.json`, not from where the command is run; an absolute path works too.
+
+For example, with the configuration of the statement's second example:
+
 ```sh
 java -jar backend/target/falcon-0.0.1-SNAPSHOT.jar --falcon.config-file=examples/example2/millennium-falcon.json
 ```
