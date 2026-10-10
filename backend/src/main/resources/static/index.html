@@ -1,67 +1,208 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>What are the odds?</title>
-        <style>
-            body {font-family: sans-serif; max-width: 40rem; margin: 4rem; padding: 0.1rem;}
-            #odds {font-size: 4rem; font-weight: bold;}
-            #error {color:red}
-        </style>
-    </head>
-    
-    <body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>What are the odds?</title>
+    <style>
+        :root {
+            --background: #0d0f1a;
+            --text: #eef0f6;
+            --muted: #8a90a6;
+            --accent: #ffd34d;
+            --safe: #4ade80;
+            --risky: #fbbf24;
+            --doomed: #f87171;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 2rem 1rem;
+            background-color: var(--background);
+            /* A starfield drawn with gradients, so there is no image to download. */
+            background-image:
+                radial-gradient(1px 1px at 20% 30%, #fff 50%, transparent 51%),
+                radial-gradient(1px 1px at 70% 80%, #fff 50%, transparent 51%),
+                radial-gradient(1.5px 1.5px at 40% 60%, #cfd8ff 50%, transparent 51%),
+                radial-gradient(1px 1px at 85% 20%, #fff 50%, transparent 51%),
+                radial-gradient(1.5px 1.5px at 10% 85%, #fff 50%, transparent 51%),
+                radial-gradient(ellipse at top, #1b2350 0%, transparent 60%);
+            background-size: 220px 220px, 300px 300px, 260px 260px, 340px 340px, 400px 400px, 100% 100%;
+            color: var(--text);
+            font-family: system-ui, sans-serif;
+        }
+
+        main {
+            box-sizing: border-box; /* the padding stays inside the 100% width */
+            width: 100%;
+            max-width: 26rem;
+            padding: 2.5rem 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 1.5rem;
+            background: rgba(18, 22, 40, 0.7);
+            backdrop-filter: blur(6px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        .eyebrow {
+            margin: 0 0 0.5rem;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+        }
+
+        h1 { margin: 0; font-size: 2rem; }
+
+        .subtitle { margin: 0.5rem 0 2rem; color: var(--muted); }
+
+        .file-button {
+            position: relative;
+            display: inline-block;
+            padding: 0.7rem 1.3rem;
+            border-radius: 999px;
+            background: var(--accent);
+            color: #111;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* The real input stays in the page, invisible, so the keyboard can still reach it. */
+        .file-button input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+        .file-button:focus-within { outline: 2px solid var(--text); outline-offset: 3px; }
+
+        .file-name { margin: 0.75rem 0 0; font-size: 0.85rem; color: var(--muted); }
+
+        .result { margin-top: 2.5rem; }
+
+        .odds {
+            margin: 0;
+            font-size: 4.5rem;
+            font-weight: 800;
+            color: var(--level, var(--muted));
+            transition: color 0.3s;
+        }
+
+        .bar {
+            height: 0.5rem;
+            margin-top: 1rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+
+        .fill {
+            width: 0;
+            height: 100%;
+            background: var(--level, transparent);
+            transition: width 0.8s ease;
+        }
+
+        /* The script only sets data-level; each level picks its colour here. */
+        .result[data-level="safe"] { --level: var(--safe); }
+        .result[data-level="risky"] { --level: var(--risky); }
+        .result[data-level="doomed"] { --level: var(--doomed); }
+
+        .error { margin: 1.5rem 0 0; color: var(--doomed); }
+    </style>
+</head>
+
+<body>
+    <main>
+        <p class="eyebrow">Millennium Falcon onboard computer</p>
         <h1>What are the odds?</h1>
-        <p> Upload the empire.json intercepted by the rebels.</p>
+        <p class="subtitle">Choose or drop the empire.json intercepted by the rebels.</p>
 
-        <input type="file" id="empire-plan" accept=".json">
-        <p id="odds"></p>
-        <p id="error"></p>
+        <label class="file-button">
+            <input type="file" id="empire-plan" accept=".json">
+            Choose a file
+        </label>
+        <p class="file-name" id="file-name">No file selected</p>
 
-        <script>
-            const fileInput = document.getElementById('empire-plan');
-            const oddsOutput = document.getElementById('odds');
-            const errorOutput = document.getElementById('error');
+        <section class="result" id="result" aria-live="polite">
+            <p class="odds" id="odds">–</p>
+            <div class="bar"><div class="fill" id="fill"></div></div>
+        </section>
 
-            fileInput.addEventListener('change', async () =>{
-                oddsOutput.textContent = '';
-                errorOutput.textContent = '';
+        <p class="error" id="error" role="alert"></p>
+    </main>
 
-                const file = fileInput.files[0];
-                if(!file){
+    <script>
+        const fileInput = document.getElementById('empire-plan');
+        const fileName = document.getElementById('file-name');
+        const result = document.getElementById('result');
+        const oddsOutput = document.getElementById('odds');
+        const fill = document.getElementById('fill');
+        const errorOutput = document.getElementById('error');
+
+        fileInput.addEventListener('change', async () => {
+            const file = fileInput.files[0];
+            if (!file) {
+                return;
+            }
+            fileName.textContent = file.name;
+
+            // Start from a blank result, so the bar fills up again for every file.
+            oddsOutput.textContent = '–';
+            fill.style.width = '0';
+            delete result.dataset.level;
+            errorOutput.textContent = '';
+
+            try {
+                const response = await fetch('/api/odds', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: await file.text()
+                });
+
+                if (response.status === 400) {
+                    const failure = await response.json();
+                    errorOutput.textContent = 'Invalid empire plan: ' + failure.error;
                     return;
                 }
 
-                try{
-                    const response = await fetch('/api/odds', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json'},
-                        body: await file.text()
-                    });
-
-                    if(response.status === 400){
-                        const failure = await response.json();
-                        errorOutput.textContent = 'Invalid empire plan: ' + failure.error;
-                        return;
-                    }
-
-                    if(!response.ok){
-                        errorOutput.textContent = 'The onboard computer failed to compute the odds.';
-                        return;
-                    }
-
-
-                    const res = await response.json();
-                    const percentage = res.odds > 0 ? Math.max(1, Math.round(res.odds * 100)) : 0;
-                    oddsOutput.textContent = percentage + "%";
-
-                } catch (networkError){
-                    errorOutput.textContent = 'Cannot reach the onboard computer.';
+                if (!response.ok) {
+                    errorOutput.textContent = 'The onboard computer failed to compute the odds.';
+                    return;
                 }
 
+                const res = await response.json();
+                showOdds(res.odds);
 
-            })
-        </script>
+            } catch (networkError) {
+                errorOutput.textContent = 'Cannot reach the onboard computer.';
+            }
+        });
 
-    </body>
+        // A file dropped anywhere on the page goes into the file input, as if it had been
+        // chosen there. preventDefault stops the browser from opening it in the tab.
+        document.addEventListener('dragover', event => event.preventDefault());
+        document.addEventListener('drop', event => {
+            event.preventDefault();
+            fileInput.files = event.dataTransfer.files;
+            fileInput.dispatchEvent(new Event('change'));
+        });
+
+        function showOdds(odds) {
+            // Same rule as the command line: 0% is kept for an unreachable target.
+            const percentage = odds > 0 ? Math.max(1, Math.round(odds * 100)) : 0;
+
+            oddsOutput.textContent = percentage + '%';
+            fill.style.width = percentage + '%';
+
+            if (percentage === 0) {
+                result.dataset.level = 'doomed';
+            } else if (percentage === 100) {
+                result.dataset.level = 'safe';
+            } else {
+                result.dataset.level = 'risky';
+            }
+        }
+    </script>
+</body>
 </html>
