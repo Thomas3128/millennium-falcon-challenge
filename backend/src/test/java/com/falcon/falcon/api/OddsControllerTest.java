@@ -40,11 +40,15 @@ class OddsControllerTest {
 
     @Test
     void rejects_a_plan_that_breaks_a_validation_rule() {
-        assertThat(postPlan("{\"countdown\": -1, \"bounty_hunters\": []}")).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(postPlan("{\"countdown\": -1, \"bounty_hunters\": []}"))
+                .hasStatus(HttpStatus.BAD_REQUEST)
+                .bodyJson().extractingPath("$.error").asString().contains("countdown");
     }
 
     @Test
     void rejects_a_body_that_is_not_json() {
-        assertThat(postPlan("not json")).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(postPlan("not json"))
+                .hasStatus(HttpStatus.BAD_REQUEST)
+                .bodyJson().extractingPath("$.error").isEqualTo("malformed JSON, or missing or unknown fields");
     }
 }
