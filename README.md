@@ -22,7 +22,8 @@ In the Windows command prompt, use `mvnw.cmd` instead of `./mvnw`.
 
 Both programs below take the path to a `millennium-falcon.json`. As the statement
 specifies, a relative `routes_db` is resolved from the folder of that file, not from
-where the command is run; an absolute path works too.
+where the command is run; an absolute path works too. In JSON, backslashes must be
+doubled: write a Windows path as `C:\\data\\universe.db`, or simply `C:/data/universe.db`.
 
 ### Command line
 
