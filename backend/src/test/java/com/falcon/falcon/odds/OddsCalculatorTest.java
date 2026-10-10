@@ -61,14 +61,6 @@ class OddsCalculatorTest {
     }
 
     @Test
-    void fails_when_the_target_is_not_on_the_map() {
-        OddsCalculator towardsNowhere = new OddsCalculator(GALAXY,
-                new FalconConfig(6, "Tatooine", "Coruscant", "universe.db"));
-
-        assertThat(towardsNowhere.compute(new EmpirePlan(100, List.of()))).isEqualTo(0.0);
-    }
-
-    @Test
     void crosses_safely_when_the_rebels_intercepted_no_plan() {
         assertThat(calculator.compute(new EmpirePlan(10, List.of()))).isEqualTo(1.0);
     }

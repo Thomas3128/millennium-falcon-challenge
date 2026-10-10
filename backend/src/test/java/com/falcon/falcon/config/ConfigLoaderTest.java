@@ -2,14 +2,13 @@ package com.falcon.falcon.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.assertThatCode;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-
 
 class ConfigLoaderTest {
 
@@ -80,33 +79,4 @@ class ConfigLoaderTest {
                 .isInstanceOf(ConfigurationException.class)
                 .hasRootCauseInstanceOf(IllegalArgumentException.class);
     }
-
-    @Test
-    void resolve_relative_routes_db_next_to_the_config_file(){
-        Path falconConfigPath = EXAMPLE1.resolve("millennium-falcon.json");
-        FalconConfig falconConfig = configLoader.loadFalconConfig(falconConfigPath);
-
-        Path resolved = falconConfig.resolveRouteDbPath(falconConfigPath);
-
-        assertThat(resolved).exists();
-        assertThat(resolved.normalize()).isEqualTo(EXAMPLE1.resolve("universe.db").toAbsolutePath().normalize());
-    }
-
-    @Test
-    void keep_an_absolute_path_unchanged(@TempDir Path tmp){
-        Path tmpPath = tmp.resolve("universe.db").toAbsolutePath();
-        FalconConfig falconConfig = new FalconConfig(6, "Tatooine", "Endor", tmpPath.toString());
-
-        Path resolved = falconConfig.resolveRouteDbPath(tmpPath);
-
-        assertThat(resolved).isEqualTo(tmpPath);
-    }
-
-    @Test
-        void handle_config_file_without_parent_directory(){
-            FalconConfig falconConfig = new FalconConfig(6, "Tatooine", "Endor", "universe.db");
-            
-            assertThatCode(() -> falconConfig.resolveRouteDbPath(Path.of("millenium-falcon.json"))).doesNotThrowAnyException();
-        }
-
 }

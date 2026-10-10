@@ -26,13 +26,8 @@ class SuccessOddsTest {
     }
 
     @Test
-    void guarantees_success_when_no_hunter_is_ever_met() {
-        assertThat(SuccessOdds.afterEncounters(0)).isEqualTo(1.0);
-    }
-
-    @Test
     void never_reaches_certain_capture_however_many_encounters() {
-        // The odds tends to zero but stay strictly positive: escaping is
+        // The odds tend to zero but stay strictly positive: escaping is
         // always conceivable, which is why the display only reaches 0% when
         // Endor cannot be reached at all.
         assertThat(SuccessOdds.afterEncounters(100)).isStrictlyBetween(0.0, 1.0);

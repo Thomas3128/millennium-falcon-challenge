@@ -28,6 +28,7 @@ public class OddsCalculator {
     private final int autonomy;
     private final String departure;
     private final String arrival;
+
     // Whether a route the tank can actually cover leads to the arrival. Checked once here,
     // since it depends only on the map and the autonomy: without it, an unreachable arrival
     // would make the search try every day of the countdown before giving up.
@@ -45,8 +46,11 @@ public class OddsCalculator {
     }
 
     /**
-     * The goal is to do a dijkstra where the weight is the number of time the falcon encounters the hunters,
-     * and to drop the paths leading to a countdown overlap.
+     * Runs a Dijkstra over the travel states, where each move costs the number of bounty
+     * hunter encounters it causes, and states past the countdown are never explored. The
+     * cheapest path to the arrival gives the fewest possible encounters.
+     *
+     * @return the odds of success, from 0 when the arrival cannot be reached in time to 1
      */
     public double compute(EmpirePlan plan) {
         Require.that(plan != null, "empire plan is required");
@@ -97,9 +101,9 @@ public class OddsCalculator {
         List<State> validStates = new ArrayList<>();
 
         for (Jump jump : neighbours) {
-            if (state.day() + jump.travelTime() <= countdown && jump.travelTime() <= state.fuel()) {
-                validStates.add(
-                        new State(jump.planet(), state.day() + jump.travelTime(), state.fuel() - jump.travelTime()));
+            int arrivalDay = state.day() + jump.travelTime();
+            if (arrivalDay <= countdown && jump.travelTime() <= state.fuel()) {
+                validStates.add(new State(jump.planet(), arrivalDay, state.fuel() - jump.travelTime()));
             }
         }
 
@@ -113,20 +117,20 @@ public class OddsCalculator {
 
 
     private static boolean isArrivalReachable(Galaxy galaxy, int autonomy, String departure, String arrival) {
-    Set<String> visited = new HashSet<>(List.of(departure));
-    Deque<String> toVisit = new ArrayDeque<>(List.of(departure));
+        Set<String> visited = new HashSet<>(List.of(departure));
+        Deque<String> toVisit = new ArrayDeque<>(List.of(departure));
 
-    while (!toVisit.isEmpty()) {
-        String planet = toVisit.poll();
-        if (planet.equals(arrival)) {
-            return true;
-        }
-        for (Jump jump : galaxy.neighboursOf(planet)) {
-            if (jump.travelTime() <= autonomy && visited.add(jump.planet())) {
-                toVisit.add(jump.planet());
+        while (!toVisit.isEmpty()) {
+            String planet = toVisit.poll();
+            if (planet.equals(arrival)) {
+                return true;
+            }
+            for (Jump jump : galaxy.neighboursOf(planet)) {
+                if (jump.travelTime() <= autonomy && visited.add(jump.planet())) {
+                    toVisit.add(jump.planet());
+                }
             }
         }
+        return false;
     }
-    return false;
-}
 }

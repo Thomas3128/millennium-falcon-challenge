@@ -18,6 +18,8 @@ Java 21 or later is the only prerequisite; the Maven wrapper takes care of the r
 cd backend && ./mvnw package
 ```
 
+In the Windows command prompt, use `mvnw.cmd` instead of `./mvnw`.
+
 Both programs below take the path to a `millennium-falcon.json`. As the statement
 specifies, a relative `routes_db` is resolved from the folder of that file, not from
 where the command is run; an absolute path works too.
@@ -60,7 +62,8 @@ java -jar backend/target/falcon-0.0.1-SNAPSHOT.jar --falcon.config-file=examples
 ```
 
 The server reads the configuration and the routes once, at startup. Open
-<http://localhost:8080/> and upload an `empire.json` to see the odds.
+<http://localhost:8080/> and upload an `empire.json` to see the odds. If port 8080 is
+already taken, add `--server.port=9090` (or any free port) to the command.
 
 Behind the page, a single endpoint, `POST /api/odds`, answers with the odds as a fraction,
 the same shape as the `answer.json` files of the statement.
@@ -121,11 +124,12 @@ to help prevent mistakes and write code more efficiently.
 **What I wrote.** Most of the backend: the domain code beneath the Spring layer, written
 by me and reviewed by the assistant to keep it clean and readable. I wrote some of the
 unit tests and relied on the assistant to find the edge cases. I made the design
-decisions, including every choice listed under *Assumptions*, and some of the basic JS.
+decisions, including every choice listed under *Assumptions*. I also wrote some of the
+basic JavaScript.
 
 **What the assistant wrote.** Most of the test suite, the command line entry point and
 its launch scripts, the build configuration and the HTTP controller. On the front end,
-it wrote the web page and its styling following my feedback. It also helped me debug 
+it wrote the web page and its styling following my feedback. It also helped me debug
 when I ran into errors.
 
 **How I used it.** I asked for an explanation of every piece I did not write myself, so
