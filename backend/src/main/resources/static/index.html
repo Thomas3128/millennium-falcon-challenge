@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>"What are the odds ?"</title>
+        <style>
+            body {font-family: sans-serif; max-width: 40rem; margin: 4rem; padding: 0.1rem;}
+            #odds {font-size: 4rem; font-weight: bold;}
+            #error {color:red}
+        </style>
+    </head>
+    
+    <body>
+        <h1>"What are the odds ?"</h1>
+        <p> Upload the empire.json intercepted by the rebels.</p>
+
+        <input type="file" id="empire-plan" accept=".json">
+        <p id="odds"></p>
+        <p id="error"></p>
+
+        <script>
+            const fileInput = document.getElementById('empire-plan');
+            const oddsOutput = document.getElementById('odds');
+            const errorOutput = document.getElementById('error');
+
+            fileInput.addEventListener('change', async () =>{
+                oddsOutput.textContent = '';
+                errorOutput.textContent = '';
+
+                const file = fileInput.files[0];
+                if(!file){
+                    return;
+                }
+
+                try{
+                    const response = await fetch('/api/odds', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json'},
+                        body: await file.text()
+                    });
+
+                    if(!response.ok){
+                        errorOutput.textContent = 'This file is not a valide empire plan';
+                        return;
+                    }
+
+
+                    const res = await response.json();
+                    oddsOutput.textContent = Math.round(res.odds*100) + "%";
+
+                } catch (networkError){
+                    errorOutput.textContent = 'Cannot reach the onboard computer.';
+                }
+
+
+            })
+        </script>
+
+    </body>
+</html>
