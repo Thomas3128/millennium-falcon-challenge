@@ -18,9 +18,19 @@ Java 21 or later is the only prerequisite; the Maven wrapper takes care of the r
 cd backend && ./mvnw package
 ```
 
+Both programs below take the path to a `millennium-falcon.json`. As the statement
+specifies, a relative `routes_db` is resolved from the folder of that file, not from
+where the command is run; an absolute path works too.
+
 ### Command line
 
 From the root of the repository:
+
+```sh
+./give-me-the-odds <path/to/millennium-falcon.json> <path/to/empire.json>
+```
+
+For example, with the statement's second example:
 
 ```sh
 ./give-me-the-odds examples/example2/millennium-falcon.json examples/example2/empire.json
@@ -42,9 +52,6 @@ From the root of the repository, start the server with the path to your
 ```sh
 java -jar backend/target/falcon-0.0.1-SNAPSHOT.jar --falcon.config-file=<path/to/millennium-falcon.json>
 ```
-
-As the statement specifies, a relative `routes_db` is resolved from the folder of
-`millennium-falcon.json`, not from where the command is run; an absolute path works too.
 
 For example, with the configuration of the statement's second example:
 
