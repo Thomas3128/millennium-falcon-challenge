@@ -1,0 +1,11 @@
+# Normalise text files in the repository, whatever the contributor's platform.
+* text=auto
+
+# The shell launcher must keep LF endings: a CR after #!/bin/sh breaks it on Unix.
+give-me-the-odds text eol=lf
+
+# The Windows launcher wants CRLF.
+*.bat text eol=crlf
+
+# Never touch the SQLite databases of the examples.
+*.db binary
