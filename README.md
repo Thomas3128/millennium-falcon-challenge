@@ -116,6 +116,25 @@ The statement leaves a few cases open; here is what was chosen and why.
   down to `0%` when Endor is reachable**: the statement reserves `0%` for an unreachable
   target, so tiny odds display as `1%`.
 
+## What I would do in production
+
+Two things were left out to keep the exercise focused, and would come first for a real
+deployment.
+
+### A Docker image
+
+Package the application as a Docker image: a minimal Linux system with Java 21, the jar
+and the command that starts it. It would run the same way on any machine with Docker,
+without installing Java. The path to `millennium-falcon.json` would be given when starting
+the container, through an environment variable that Spring Boot already reads.
+
+### Logs that support teams can use
+
+Log which galaxy the server loaded at startup, and one line per computation with its
+result or the reason it was rejected. Support teams could then answer a client's question
+without asking for their files. A failed startup would also end with one clear line
+instead of a long stack trace.
+
 ## Use of AI tools
 
 I used **Claude Code**, Anthropic's coding assistant, throughout the project.
