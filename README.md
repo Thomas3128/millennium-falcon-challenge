@@ -29,7 +29,8 @@ doubled: write a Windows path as `C:\\data\\universe.db`, or simply `C:/data/uni
 
 ### Command line
 
-From the root of the repository:
+From the root of the repository, replacing both placeholders with the paths to your
+files:
 
 ```sh
 ./give-me-the-odds <path/to/millennium-falcon.json> <path/to/empire.json>
@@ -51,8 +52,8 @@ error, with exit code `1` for a wrong invocation and `2` for a failed mission.
 
 ### Web application
 
-From the root of the repository, start the server with the path to your
-`millennium-falcon.json`:
+From the root of the repository, start the server, replacing the placeholder with the
+path to your `millennium-falcon.json`:
 
 ```sh
 java -jar backend/target/falcon-0.0.1-SNAPSHOT.jar --falcon.config-file=<path/to/millennium-falcon.json>
