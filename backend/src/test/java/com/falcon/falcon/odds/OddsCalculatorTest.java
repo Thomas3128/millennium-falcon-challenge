@@ -110,4 +110,34 @@ class OddsCalculatorTest {
 
         assertThat(odds).isEqualTo(0.0);
     }
+
+    @Test
+    void returns_the_only_journey_of_the_second_example() {
+        // Within 8 days the only way is: Tatooine to Hoth, refuel on Hoth, then Endor.
+        Itinerary itinerary = calculator.itinerary(new EmpirePlan(8, HUNTERS_ON_HOTH));
+
+        assertThat(itinerary.steps()).containsExactly(
+                new Step("Tatooine", 0, 6, false),
+                new Step("Hoth", 6, 0, true),
+                new Step("Hoth", 7, 6, true),
+                new Step("Endor", 8, 5, false));
+    }
+
+    @Test
+    void returns_a_journey_without_any_watched_step_when_the_odds_are_certain() {
+        Itinerary itinerary = calculator.itinerary(new EmpirePlan(10, HUNTERS_ON_HOTH));
+
+        assertThat(itinerary.odds()).isEqualTo(1.0);
+        assertThat(itinerary.steps()).first().isEqualTo(new Step("Tatooine", 0, 6, false));
+        assertThat(itinerary.steps()).last().extracting(Step::planet).isEqualTo("Endor");
+        assertThat(itinerary.steps()).noneMatch(Step::watched);
+    }
+
+    @Test
+    void returns_no_journey_when_the_arrival_is_out_of_reach() {
+        Itinerary itinerary = calculator.itinerary(new EmpirePlan(7, HUNTERS_ON_HOTH));
+
+        assertThat(itinerary.odds()).isEqualTo(0.0);
+        assertThat(itinerary.steps()).isEmpty();
+    }
 }

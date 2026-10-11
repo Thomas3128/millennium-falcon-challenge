@@ -53,9 +53,14 @@ public class OddsCalculator {
      * @return the odds of success, from 0 when the arrival cannot be reached in time to 1
      */
     public double compute(EmpirePlan plan) {
+        return itinerary(plan).odds();
+    }
+
+    /** Same search as {@link #compute}, but also returns the safest journey it found. */
+    public Itinerary itinerary(EmpirePlan plan) {
         Require.that(plan != null, "empire plan is required");
         if (!arrivalReachable) {
-            return 0.0;
+            return Itinerary.unreachable();
         }
 
         BountyHunterSchedule schedule = new BountyHunterSchedule(plan.bountyHunters());
@@ -67,6 +72,7 @@ public class OddsCalculator {
         int startCost = schedule.isWatched(departure, 0) ? 1 : 0;
 
         Map<State, Integer> best = new HashMap<>();
+        Map<State, State> previous = new HashMap<>(); // where each state was best reached from
         PriorityQueue<Node> queue = new PriorityQueue<>(comparingInt(Node::encounters)); // weight -> time of encountering hunters
         best.put(start, startCost);
         queue.add(new Node(start, startCost));
@@ -80,7 +86,8 @@ public class OddsCalculator {
             }
 
             if (state.planet().equals(arrival)) {
-                return SuccessOdds.afterEncounters(current.encounters());
+                return new Itinerary(SuccessOdds.afterEncounters(current.encounters()),
+                        journeyTo(state, previous, schedule));
             }
 
             for (State next : successors(state, countdown)) {
@@ -89,11 +96,23 @@ public class OddsCalculator {
 
                 if (cost < best.getOrDefault(next, Integer.MAX_VALUE)) {
                     best.put(next, cost);
+                    previous.put(next, state);
                     queue.add(new Node(next, cost));
                 }
             }
         }
-        return 0.0;
+        return Itinerary.unreachable();
+    }
+
+    /** Walks back from the arrival to the departure, then lists the states in travel order. */
+    private static List<Step> journeyTo(State arrivalState, Map<State, State> previous,
+            BountyHunterSchedule schedule) {
+        List<Step> steps = new ArrayList<>();
+        for (State state = arrivalState; state != null; state = previous.get(state)) {
+            steps.add(0, new Step(state.planet(), state.day(), state.fuel(),
+                    schedule.isWatched(state.planet(), state.day())));
+        }
+        return steps;
     }
 
     private List<State> successors(State state, int countdown) {

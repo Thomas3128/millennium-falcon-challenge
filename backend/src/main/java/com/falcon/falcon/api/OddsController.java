@@ -6,12 +6,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.falcon.falcon.app.Mission;
 import com.falcon.falcon.config.EmpirePlan;
+import com.falcon.falcon.config.FalconConfig;
+import com.falcon.falcon.odds.Itinerary;
 
 /**
  * The onboard computer, reachable over HTTP. Spring creates a single instance when the
@@ -28,7 +31,14 @@ public class OddsController {
 
     @PostMapping("/api/odds")
     OddsResponse odds(@RequestBody EmpirePlan plan) {
-        return new OddsResponse(mission.odds(plan));
+        Itinerary itinerary = mission.itinerary(plan);
+        return new OddsResponse(itinerary.odds(), itinerary.steps());
+    }
+
+    @GetMapping("/api/galaxy")
+    GalaxyResponse galaxy() {
+        FalconConfig config = mission.falconConfig();
+        return new GalaxyResponse(config.departure(), config.arrival(), config.autonomy(), mission.routes());
     }
 
     /**

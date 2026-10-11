@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>C-3PO · What are the odds?</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.34.3/cytoscape.min.js"></script>
     <style>
         :root {
             --ivory: #f4ecda;
@@ -23,6 +24,7 @@
             min-height: 100vh;
             display: grid;
             place-items: center;
+            gap: 1.5rem;
             padding: 2rem 1rem;
             background: radial-gradient(circle at top, var(--paper), var(--ivory) 70%);
             color: var(--ink);
@@ -102,6 +104,61 @@
         .quote::after { content: "”"; }
 
         .error { margin: 1.25rem 0 0; color: var(--doomed); }
+
+        .chart {
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 56rem;
+            padding: 1.75rem 2rem;
+            border: 1px solid var(--gold-light);
+            border-radius: 4px;
+            background: var(--paper);
+            box-shadow: 0 12px 40px rgba(80, 60, 20, 0.15);
+        }
+
+        .chart h2 {
+            margin: 0;
+            font-size: 0.8rem;
+            font-weight: normal;
+            letter-spacing: 0.35em;
+            text-transform: uppercase;
+            color: var(--gold-dark);
+        }
+
+        .chart .mission { margin: 0.3rem 0 1rem; font-style: italic; color: var(--muted); }
+
+        .chart-body { display: grid; grid-template-columns: 3fr 2fr; gap: 1.5rem; }
+
+        @media (max-width: 720px) {
+            .chart-body { grid-template-columns: 1fr; }
+        }
+
+        #graph {
+            height: 22rem;
+            border: 1px solid var(--gold-light);
+            border-radius: 4px;
+            background: var(--ivory);
+        }
+
+        .journey { margin: 0; padding: 0; list-style: none; }
+
+        .journey li {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.45rem 0;
+            border-bottom: 1px dotted var(--gold-light);
+        }
+
+        .journey .day {
+            flex: none;
+            width: 3.5rem;
+            font-variant-numeric: tabular-nums;
+            color: var(--gold-dark);
+        }
+
+        .journey .watched { color: var(--doomed); }
+
+        .journey .empty { color: var(--muted); font-style: italic; border: none; }
     </style>
 </head>
 
@@ -128,6 +185,17 @@
         <p class="error" id="error" role="alert"></p>
     </main>
 
+    <section class="chart">
+        <h2>Navigation chart</h2>
+        <p class="mission" id="mission">Loading the galaxy…</p>
+        <div class="chart-body">
+            <div id="graph"></div>
+            <ol class="journey" id="journey">
+                <li class="empty">The safest journey will appear here.</li>
+            </ol>
+        </div>
+    </section>
+
     <script>
         const IDLE_QUOTE = 'Sir, give me the intercepted plans and I shall calculate the odds.';
 
@@ -150,6 +218,7 @@
             quote.textContent = IDLE_QUOTE;
             delete result.dataset.level;
             errorOutput.textContent = '';
+            showJourney([], null);
 
             try {
                 const response = await fetch('/api/odds', {
@@ -171,6 +240,7 @@
 
                 const res = await response.json();
                 showOdds(res.odds);
+                showJourney(res.path, result.dataset.level);
 
             } catch (networkError) {
                 errorOutput.textContent = 'Oh dear! I cannot reach the onboard computer.';
@@ -216,6 +286,139 @@
                     clearInterval(counter);
                 }
             }, 15);
+        }
+
+        // ---------------------------------------------------------------- Navigation chart
+
+        // Cytoscape cannot read CSS variables, so the palette is repeated here.
+        const COLOURS = {
+            ink: '#2e2419', muted: '#75654f', paper: '#fffaf0', gold: '#c9a227', goldDark: '#8a6a1c',
+            goldLight: '#e3cf9b', safe: '#2f7d4f', risky: '#b26a00', doomed: '#b23a2e', hunted: '#f3c9c4'
+        };
+
+        const mission = document.getElementById('mission');
+        const journey = document.getElementById('journey');
+        let graph;
+
+        // The galaxy never changes while the server runs: draw it once, when the page opens.
+        loadGalaxy();
+
+        async function loadGalaxy() {
+            try {
+                const galaxy = await (await fetch('/api/galaxy')).json();
+                mission.textContent = galaxy.departure + ' → ' + galaxy.arrival
+                        + ' · autonomy of ' + galaxy.autonomy + ' days · ' + galaxy.routes.length + ' routes';
+                drawGalaxy(galaxy);
+            } catch (failure) {
+                mission.textContent = 'The galaxy could not be loaded.';
+            }
+        }
+
+        function drawGalaxy(galaxy) {
+            const planets = new Set();
+            galaxy.routes.forEach(route => planets.add(route.origin).add(route.destination));
+            planets.add(galaxy.departure).add(galaxy.arrival);
+
+            const nodes = [...planets].map(planet => ({
+                data: { id: planet },
+                classes: planet === galaxy.departure || planet === galaxy.arrival ? 'endpoint' : ''
+            }));
+            const edges = galaxy.routes.map((route, index) => ({
+                data: { id: 'route-' + index, source: route.origin, target: route.destination, time: route.travelTime }
+            }));
+
+            graph = cytoscape({
+                container: document.getElementById('graph'),
+                elements: [...nodes, ...edges],
+                // A force layout reads well for a few dozen planets, but is too slow for thousands.
+                layout: { name: nodes.length > 300 ? 'grid' : 'cose', animate: false, padding: 30 },
+                style: [
+                    { selector: 'node', style: {
+                        'width': 20, 'height': 20, 'background-color': COLOURS.goldLight,
+                        'border-width': 1, 'border-color': COLOURS.goldDark,
+                        'label': 'data(id)', 'font-family': 'Palatino Linotype, Georgia, serif', 'font-size': 12,
+                        'color': COLOURS.ink, 'text-valign': 'bottom', 'text-margin-y': 5,
+                        'text-background-color': COLOURS.paper, 'text-background-opacity': 0.85,
+                        'text-background-padding': 2 } },
+                    { selector: 'node.endpoint', style: {
+                        'width': 28, 'height': 28, 'background-color': COLOURS.gold, 'border-width': 2 } },
+                    { selector: 'edge', style: {
+                        'width': 2, 'line-color': COLOURS.goldLight, 'curve-style': 'bezier',
+                        'label': 'data(time)', 'font-size': 10, 'color': COLOURS.muted,
+                        'text-background-color': COLOURS.paper, 'text-background-opacity': 1,
+                        'text-background-padding': 2 } },
+                    { selector: 'edge.on-path', style: { 'width': 4, 'line-color': 'data(colour)', 'z-index': 10 } },
+                    { selector: 'node.on-path', style: { 'border-width': 3, 'border-color': 'data(colour)' } },
+                    { selector: 'node.watched', style: { 'background-color': COLOURS.hunted } }
+                ]
+            });
+        }
+
+        function showJourney(path, level) {
+            if (graph) {
+                graph.elements().removeClass('on-path watched');
+            }
+            journey.replaceChildren();
+
+            if (!level) {
+                journey.append(item('', 'The safest journey will appear here.', 'empty'));
+                return;
+            }
+            if (path.length === 0) {
+                journey.append(item('', 'No journey reaches the target before the countdown ends.', 'empty'));
+                return;
+            }
+
+            const colour = COLOURS[level];
+            path.forEach((step, index) => {
+                const before = path[index - 1];
+                journey.append(item('Day ' + step.day, describe(step, before), step.watched ? 'watched' : ''));
+                highlight(step, before, colour);
+            });
+        }
+
+        function describe(step, before) {
+            let text;
+            if (!before) {
+                text = 'Leave ' + step.planet + ' with a full tank';
+            } else if (before.planet === step.planet) {
+                text = 'Stay on ' + step.planet + ' and refuel';
+            } else {
+                const days = step.day - before.day;
+                text = 'Jump to ' + step.planet + ' (' + days + (days === 1 ? ' day, ' : ' days, ')
+                        + step.fuel + ' left)';
+            }
+            return step.watched ? text + ' · bounty hunters!' : text;
+        }
+
+        function highlight(step, before, colour) {
+            if (!graph) {
+                return;
+            }
+            const planet = graph.getElementById(step.planet);
+            planet.data('colour', colour).addClass('on-path');
+            if (step.watched) {
+                planet.addClass('watched');
+            }
+            if (before && before.planet !== step.planet) {
+                // Several routes may link the same two planets: take the one matching the jump.
+                const route = planet.edgesWith(graph.getElementById(before.planet))
+                        .filter(edge => edge.data('time') === step.day - before.day)
+                        .first();
+                route.data('colour', colour).addClass('on-path');
+            }
+        }
+
+        function item(day, text, className) {
+            const li = document.createElement('li');
+            li.className = className;
+            const dayLabel = document.createElement('span');
+            dayLabel.className = 'day';
+            dayLabel.textContent = day;
+            const description = document.createElement('span');
+            description.textContent = text;
+            li.append(dayLabel, description);
+            return li;
         }
     </script>
 </body>

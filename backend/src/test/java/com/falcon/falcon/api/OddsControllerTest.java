@@ -51,4 +51,20 @@ class OddsControllerTest {
                 .hasStatus(HttpStatus.BAD_REQUEST)
                 .bodyJson().extractingPath("$.error").isEqualTo("malformed JSON, or missing or unknown fields");
     }
+
+    @Test
+    void returns_the_journey_along_with_the_odds() throws Exception {
+        String plan = Files.readString(Path.of("../examples/example2/empire.json"));
+
+        assertThat(postPlan(plan)).hasStatusOk().bodyJson().extractingPath("$.path[*].planet")
+                .asArray().containsExactly("Tatooine", "Hoth", "Hoth", "Endor");
+    }
+
+    @Test
+    void describes_the_galaxy_loaded_at_startup() {
+        assertThat(mvc.get().uri("/api/galaxy")).hasStatusOk().bodyJson()
+                .extractingPath("$.routes").asArray().hasSize(5);
+        assertThat(mvc.get().uri("/api/galaxy")).bodyJson()
+                .extractingPath("$.departure").isEqualTo("Tatooine");
+    }
 }
