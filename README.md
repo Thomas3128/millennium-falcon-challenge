@@ -66,8 +66,9 @@ The server reads the configuration and the routes once, at startup. Open
 <http://localhost:8080/> and upload an `empire.json` to see the odds. If port 8080 is
 already taken, add `--server.port=9090` (or any free port) to the command.
 
-Behind the page, a single endpoint, `POST /api/odds`, answers with the odds as a fraction,
-the same shape as the `answer.json` files of the statement.
+Behind the page, a single endpoint, `POST /api/odds`, answers with the odds as a fraction
+between 0 and 1, such as `{"odds": 0.81}`: the same shape as the `answer.json` files of
+the statement. The page turns it into the percentage it displays.
 
 The same jar holds both programs: `java -jar` starts the web application, and the
 `give-me-the-odds` script selects the command line one.
@@ -98,7 +99,6 @@ The statement leaves a few cases open; here is what was chosen and why.
 - **A route from a planet to itself is ignored**: it can never belong to an optimal path.
 - **Several routes between the same two planets are all kept**: a longer jump may dodge
   the hunters.
-- **Planet names are matched exactly**, without trimming or case folding.
 - **An unknown departure or arrival planet gives 0%**: no route reaches it.
 
 ### Travel model
@@ -108,7 +108,7 @@ The statement leaves a few cases open; here is what was chosen and why.
 
 ### Displayed result
 
-- **The percentage is rounded to the nearest integer** (`0.729` gives `73`), **but never
+- **The percentage is rounded to the nearest integer** (`0.729` gives `73%`), **but never
   down to `0%` when Endor is reachable**: the statement reserves `0%` for an unreachable
   target, so tiny odds display as `1%`.
 

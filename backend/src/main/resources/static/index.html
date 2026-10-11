@@ -3,16 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>What are the odds?</title>
+    <title>C-3PO · What are the odds?</title>
     <style>
         :root {
-            --background: #0d0f1a;
-            --text: #eef0f6;
-            --muted: #8a90a6;
-            --accent: #ffd34d;
-            --safe: #4ade80;
-            --risky: #fbbf24;
-            --doomed: #f87171;
+            --ivory: #f4ecda;
+            --paper: #fffaf0;
+            --ink: #2e2419;
+            --muted: #75654f;
+            --gold: #c9a227;
+            --gold-dark: #8a6a1c;
+            --gold-light: #e3cf9b;
+            --safe: #2f7d4f;
+            --risky: #b26a00;
+            --doomed: #b23a2e;
         }
 
         body {
@@ -21,86 +24,72 @@
             display: grid;
             place-items: center;
             padding: 2rem 1rem;
-            background-color: var(--background);
-            /* A starfield drawn with gradients, so there is no image to download. */
-            background-image:
-                radial-gradient(1px 1px at 20% 30%, #fff 50%, transparent 51%),
-                radial-gradient(1px 1px at 70% 80%, #fff 50%, transparent 51%),
-                radial-gradient(1.5px 1.5px at 40% 60%, #cfd8ff 50%, transparent 51%),
-                radial-gradient(1px 1px at 85% 20%, #fff 50%, transparent 51%),
-                radial-gradient(1.5px 1.5px at 10% 85%, #fff 50%, transparent 51%),
-                radial-gradient(ellipse at top, #1b2350 0%, transparent 60%);
-            background-size: 220px 220px, 300px 300px, 260px 260px, 340px 340px, 400px 400px, 100% 100%;
-            color: var(--text);
-            font-family: system-ui, sans-serif;
+            background: radial-gradient(circle at top, var(--paper), var(--ivory) 70%);
+            color: var(--ink);
+            font-family: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
         }
 
         main {
-            box-sizing: border-box; /* the padding stays inside the 100% width */
+            box-sizing: border-box;
             width: 100%;
-            max-width: 26rem;
+            max-width: 30rem;
             padding: 2.5rem 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 1.5rem;
-            background: rgba(18, 22, 40, 0.7);
-            backdrop-filter: blur(6px);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--gold-light);
+            border-radius: 4px;
+            /* A second, inner gold frame, like an engraved plate. */
+            outline: 1px solid var(--gold-light);
+            outline-offset: -10px;
+            background: var(--paper);
+            box-shadow: 0 12px 40px rgba(80, 60, 20, 0.15);
             text-align: center;
         }
 
-        .eyebrow {
-            margin: 0 0 0.5rem;
-            font-size: 0.75rem;
-            letter-spacing: 0.2em;
+        .droid {
+            margin: 0;
+            font-size: 0.8rem;
+            letter-spacing: 0.35em;
             text-transform: uppercase;
-            color: var(--accent);
+            color: var(--gold-dark);
         }
 
-        h1 { margin: 0; font-size: 2rem; }
+        .role { margin: 0.3rem 0 0; font-style: italic; color: var(--muted); }
 
-        .subtitle { margin: 0.5rem 0 2rem; color: var(--muted); }
+        h1 { margin: 1.25rem 0 1.5rem; font-size: 2.2rem; font-weight: normal; }
+
+        .dropzone {
+            padding: 1.25rem 1rem;
+            border: 1px dashed var(--gold);
+            border-radius: 4px;
+        }
+
+        .dropzone p { margin: 0 0 0.75rem; color: var(--muted); }
 
         .file-button {
             position: relative;
             display: inline-block;
-            padding: 0.7rem 1.3rem;
-            border-radius: 999px;
-            background: var(--accent);
-            color: #111;
-            font-weight: 600;
+            padding: 0.55rem 1.4rem;
+            border-radius: 4px;
+            background: var(--gold);
+            color: var(--ink);
+            font-weight: bold;
             cursor: pointer;
         }
 
         /* The real input stays in the page, invisible, so the keyboard can still reach it. */
         .file-button input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 
-        .file-button:focus-within { outline: 2px solid var(--text); outline-offset: 3px; }
+        .file-button:focus-within { outline: 2px solid var(--ink); outline-offset: 3px; }
 
         .file-name { margin: 0.75rem 0 0; font-size: 0.85rem; color: var(--muted); }
 
-        .result { margin-top: 2.5rem; }
-
         .odds {
-            margin: 0;
-            font-size: 4.5rem;
-            font-weight: 800;
-            color: var(--level, var(--muted));
+            margin: 1.75rem 0 0;
+            font-size: 5rem;
+            line-height: 1;
+            /* Every digit takes the same width, so the number does not wobble as it counts. */
+            font-variant-numeric: tabular-nums;
+            color: var(--level, var(--gold));
             transition: color 0.3s;
-        }
-
-        .bar {
-            height: 0.5rem;
-            margin-top: 1rem;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.08);
-            overflow: hidden;
-        }
-
-        .fill {
-            width: 0;
-            height: 100%;
-            background: var(--level, transparent);
-            transition: width 0.8s ease;
         }
 
         /* The script only sets data-level; each level picks its colour here. */
@@ -108,36 +97,45 @@
         .result[data-level="risky"] { --level: var(--risky); }
         .result[data-level="doomed"] { --level: var(--doomed); }
 
-        .error { margin: 1.5rem 0 0; color: var(--doomed); }
+        .quote { margin: 1.25rem 0 0; font-style: italic; color: var(--muted); }
+        .quote::before { content: "“"; }
+        .quote::after { content: "”"; }
+
+        .error { margin: 1.25rem 0 0; color: var(--doomed); }
     </style>
 </head>
 
 <body>
     <main>
-        <p class="eyebrow">Millennium Falcon onboard computer</p>
+        <p class="droid">✦ C-3PO ✦</p>
+        <p class="role">Human–cyborg relations · Odds calculation</p>
         <h1>What are the odds?</h1>
-        <p class="subtitle">Choose or drop the empire.json intercepted by the rebels.</p>
 
-        <label class="file-button">
-            <input type="file" id="empire-plan" accept=".json">
-            Choose a file
-        </label>
-        <p class="file-name" id="file-name">No file selected</p>
+        <div class="dropzone">
+            <p>Drop the intercepted plans anywhere, or</p>
+            <label class="file-button">
+                <input type="file" id="empire-plan" accept=".json">
+                choose a file
+            </label>
+            <p class="file-name" id="file-name">No file selected</p>
+        </div>
 
-        <section class="result" id="result" aria-live="polite">
+        <section class="result" id="result">
             <p class="odds" id="odds">–</p>
-            <div class="bar"><div class="fill" id="fill"></div></div>
+            <p class="quote" id="quote" aria-live="polite">Sir, give me the intercepted plans and I shall calculate the odds.</p>
         </section>
 
         <p class="error" id="error" role="alert"></p>
     </main>
 
     <script>
+        const IDLE_QUOTE = 'Sir, give me the intercepted plans and I shall calculate the odds.';
+
         const fileInput = document.getElementById('empire-plan');
         const fileName = document.getElementById('file-name');
         const result = document.getElementById('result');
         const oddsOutput = document.getElementById('odds');
-        const fill = document.getElementById('fill');
+        const quote = document.getElementById('quote');
         const errorOutput = document.getElementById('error');
 
         fileInput.addEventListener('change', async () => {
@@ -147,9 +145,9 @@
             }
             fileName.textContent = file.name;
 
-            // Start from a blank result, so the bar fills up again for every file.
+            // Start from a blank result for every new file.
             oddsOutput.textContent = '–';
-            fill.style.width = '0';
+            quote.textContent = IDLE_QUOTE;
             delete result.dataset.level;
             errorOutput.textContent = '';
 
@@ -162,12 +160,12 @@
 
                 if (response.status === 400) {
                     const failure = await response.json();
-                    errorOutput.textContent = 'Invalid empire plan: ' + failure.error;
+                    errorOutput.textContent = 'Oh dear! Invalid empire plan: ' + failure.error;
                     return;
                 }
 
                 if (!response.ok) {
-                    errorOutput.textContent = 'The onboard computer failed to compute the odds.';
+                    errorOutput.textContent = 'Oh dear! The onboard computer failed to compute the odds.';
                     return;
                 }
 
@@ -175,7 +173,7 @@
                 showOdds(res.odds);
 
             } catch (networkError) {
-                errorOutput.textContent = 'Cannot reach the onboard computer.';
+                errorOutput.textContent = 'Oh dear! I cannot reach the onboard computer.';
             }
         });
 
@@ -191,17 +189,33 @@
         function showOdds(odds) {
             // Same rule as the command line: 0% is kept for an unreachable target.
             const percentage = odds > 0 ? Math.max(1, Math.round(odds * 100)) : 0;
-
-            oddsOutput.textContent = percentage + '%';
-            fill.style.width = percentage + '%';
+            countUp(percentage);
 
             if (percentage === 0) {
                 result.dataset.level = 'doomed';
+                quote.textContent = 'Sir, Endor cannot be reached before the Death Star fires. We’re doomed!';
             } else if (percentage === 100) {
                 result.dataset.level = 'safe';
+                quote.textContent = 'Sir, a clear path to Endor, without a single bounty hunter. How fortunate!';
             } else {
                 result.dataset.level = 'risky';
+                quote.textContent = 'Sir, I calculate the odds of reaching Endor at ' + percentage
+                        + '%. Bounty hunters lie in wait. I have a bad feeling about this.';
             }
+        }
+
+        // Shows the percentage climbing from 0 to its value, two points at a time.
+        let counter;
+        function countUp(target) {
+            clearInterval(counter);
+            let shown = 0;
+            counter = setInterval(() => {
+                shown = Math.min(target, shown + 2);
+                oddsOutput.textContent = shown + '%';
+                if (shown === target) {
+                    clearInterval(counter);
+                }
+            }, 15);
         }
     </script>
 </body>
