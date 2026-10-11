@@ -15,7 +15,9 @@ Falcon reaches Endor before the Death Star destroys it.
 Java 21 or later is the only prerequisite; the Maven wrapper takes care of the rest.
 
 ```sh
-cd backend && ./mvnw package
+cd backend
+./mvnw package
+cd ..
 ```
 
 In the Windows command prompt, use `mvnw.cmd` instead of `./mvnw`.
@@ -76,7 +78,8 @@ The same jar holds both programs: `java -jar` starts the web application, and th
 ### Tests
 
 ```sh
-cd backend && ./mvnw test
+cd backend
+./mvnw test
 ```
 
 ## Assumptions
