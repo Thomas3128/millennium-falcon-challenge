@@ -67,7 +67,7 @@ public class OddsCalculator {
         int startCost = schedule.isWatched(departure, 0) ? 1 : 0;
 
         Map<State, Integer> best = new HashMap<>();
-        PriorityQueue<Node> queue = new PriorityQueue<>(comparingInt(Node::encounters)); // weight -> time of encounterinig hunters
+        PriorityQueue<Node> queue = new PriorityQueue<>(comparingInt(Node::encounters)); // weight -> time of encountering hunters
         best.put(start, startCost);
         queue.add(new Node(start, startCost));
 
@@ -76,7 +76,7 @@ public class OddsCalculator {
             State state = current.state();
 
             if (current.encounters() > best.getOrDefault(state, Integer.MAX_VALUE)) {
-                continue; // don't consider an heavier path
+                continue; // don't consider a heavier path
             }
 
             if (state.planet().equals(arrival)) {
